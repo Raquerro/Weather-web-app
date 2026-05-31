@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import { login, logout, register, getToken, getUser } from "../services/authService";
+import { useState } from "react";
+import { login, logout, register, getUser } from "../services/authService";
 
 export const useAuth = () => {
-  const [user, setUser] = useState(getUser);
+  const [user, setUser] = useState(null);
 
   const handleLogin = async (email, password) => {
-    await login(email, password);
-    setUser(getUser());
+    const data = await login(email, password);
+    setUser(getUser(data.access_token));
   };
 
   const handleRegister = async (email, password) => {
     await register(email, password);
-    await handleLogin(email, password);   // po rejestracji od razu loguje
+    await handleLogin(email, password);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
   };
 

@@ -48,8 +48,7 @@ function LocationMarker({ setCoords }) {
   return position ? <Marker position={position} icon={customIcon} /> : null;
 }
 
-export default function WeatherPage() {
-  const { user, logout } = useAuth();
+export default function WeatherPage({ user, logout }) {
   const [coords, setCoords] = useState(null);
   const [weather, setWeather] = useState(null);
 

@@ -1,6 +1,10 @@
 const AUTH_URL = process.env.REACT_APP_AUTH_URL;
 const API_URL  = process.env.REACT_APP_API_URL;
 
+let inMemoryToken = null;
+
+export const getToken = () => inMemoryToken;
+
 const getErrorMessage = async (res) => {
   const data = await res.json();
   if (typeof data.detail === "string") return data.detail;
@@ -13,6 +17,7 @@ export const register = async (email, password) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
+    credentials: "include",
   });
   if (!res.ok) throw new Error(await getErrorMessage(res));
   return res.json();
@@ -23,37 +28,69 @@ export const login = async (email, password) => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
+    credentials: "include",   // ← wysyła i przyjmuje cookies
   });
   if (!res.ok) throw new Error(await getErrorMessage(res));
   const data = await res.json();
-  localStorage.setItem("token", data.access_token);
+  inMemoryToken = data.access_token;
   return data;
 };
 
-export const logout = () => localStorage.removeItem("token");
+export const tryRefresh = async () => {
+  try {
+    const res = await fetch(`${AUTH_URL}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    inMemoryToken = data.access_token;
+    return true;
+  } catch {
+    return false;
+  }
+};
 
-export const getToken = () => localStorage.getItem("token");
-
-export const authFetch = (path, options = {}) =>
-  fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${getToken()}`,
-    },
+export const logout = async () => {
+  await fetch(`${AUTH_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
   });
+  inMemoryToken = null;
+};
 
-export const getUser = () => {
-  const token = getToken();
+export const getUser = (token = inMemoryToken) => {
   if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    if (payload.exp * 1000 < Date.now()) {
-      logout();
-      return null;
-    }
+    if (payload.exp * 1000 < Date.now()) return null;
     return payload;
   } catch {
     return null;
   }
 };
+
+// automatycznie odnawia access token gdy wygaśnie
+export const authFetch = async (path, options = {}) => {
+  let res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: { ...options.headers, Authorization: `Bearer ${getToken()}` },
+  });
+
+  if (res.status === 401) {
+    const refreshed = await tryRefresh();
+    if (!refreshed) {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      window.location.href = "/login";
+      return;
+    }
+    res = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: { ...options.headers, Authorization: `Bearer ${getToken()}` },
+    });
+  }
+
+  return res;
+};
+
