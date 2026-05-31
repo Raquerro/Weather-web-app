@@ -65,13 +65,20 @@ function App() {
   const [weather, setWeather] = useState(null);
 
   const fetchWeather = async () => {
-    if (!coords) return;
+  if (!coords) return;
 
-    const res = await fetch(
-      `http://127.0.0.1:8000/weather?lat=${coords.lat}&lon=${coords.lon}`
-    );
-    const data = await res.json();
-    setWeather(data);
+  const res = await fetch(
+    `http://127.0.0.1:8000/weather?lat=${coords.lat}&lon=${coords.lon}`
+  );
+  const data = await res.json();
+
+  if (!data.daily) {
+    alert("Nie udało się pobrać pogody. Sprawdź konsolę.");
+    console.error("Odpowiedź API:", data);
+    return;
+  }
+
+  setWeather(data);
   };
 
   return (
