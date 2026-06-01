@@ -5,31 +5,47 @@ let inMemoryToken = null;
 
 export const getToken = () => inMemoryToken;
 
+
 const getErrorMessage = async (res) => {
-  const data = await res.json();
-  if (typeof data.detail === "string") return data.detail;
-  if (Array.isArray(data.detail)) return data.detail.map(e => e.msg).join(", ");
-  return "Nieznany błąd";
-};
+  try {
+    const data = await res.json();
+    if (res.status === 429) return "Zbyt wiele prób. Spróbuj ponownie za minutę.";
+    if (typeof data.detail === "string") return data.detail;
+    if (Array.isArray(data.detail)) return data.detail.map(e => e.msg.replace("Value error, ", "")).join(", ");
+    return "Nieznany błąd serwera.";
+  } catch {
+    return "Nieznany błąd serwera.";
+  }
+};  
 
 export const register = async (email, password) => {
-  const res = await fetch(`${AUTH_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-    credentials: "include",
-  });
+  let res;
+  try {
+    res = await fetch(`${AUTH_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      credentials: "include",
+    });
+  } catch {
+    throw new Error("Brak połączenia z serwerem. Sprawdź połączenie internetowe.");
+  }
   if (!res.ok) throw new Error(await getErrorMessage(res));
   return res.json();
 };
 
 export const login = async (email, password) => {
-  const res = await fetch(`${AUTH_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-    credentials: "include",   // ← wysyła i przyjmuje cookies
-  });
+  let res;
+  try {
+    res = await fetch(`${AUTH_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+      credentials: "include",
+    });
+  } catch {
+    throw new Error("Brak połączenia z serwerem. Sprawdź połączenie internetowe.");
+  }
   if (!res.ok) throw new Error(await getErrorMessage(res));
   const data = await res.json();
   inMemoryToken = data.access_token;
@@ -52,10 +68,14 @@ export const tryRefresh = async () => {
 };
 
 export const logout = async () => {
-  await fetch(`${AUTH_URL}/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
+  try {
+    await fetch(`${AUTH_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // nawet jeśli serwer nie odpowie, czyścimy token lokalnie
+  }
   inMemoryToken = null;
 };
 
@@ -80,9 +100,9 @@ export const authFetch = async (path, options = {}) => {
   if (res.status === 401) {
     const refreshed = await tryRefresh();
     if (!refreshed) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      window.location.href = "/login";
+      inMemoryToken = null;
+      // przekazuje powód przekierowania jako parametr URL
+      window.location.href = "/login?reason=session_expired";
       return;
     }
     res = await fetch(`${API_URL}${path}`, {

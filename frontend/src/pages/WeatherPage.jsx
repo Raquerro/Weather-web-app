@@ -2,7 +2,6 @@ import { useState } from "react";
 import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useAuth } from "../hooks/useAuth";
 
 const customIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
