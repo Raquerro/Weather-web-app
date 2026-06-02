@@ -19,5 +19,27 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
+
+class UpdateRoleRequest(BaseModel):
+    role: str
+
+    @field_validator("role")
+    @classmethod
+    def valid_role(cls, v):
+        if v not in ("user", "premium", "admin"):
+            raise ValueError("Rola musi być jedną z: user, premium, admin")
+        return v
+
+class UpdateProfileRequest(BaseModel):
+    phone: str | None = None
+    sms_notifications: bool | None = None
+
+    @field_validator("phone")
+    @classmethod
+    def valid_phone(cls, v):
+        if v is not None:
+            digits = v.replace("+", "").replace(" ", "").replace("-", "")
+            if not digits.isdigit() or not (7 <= len(digits) <= 15):
+                raise ValueError("Nieprawidłowy numer telefonu")
+        return v

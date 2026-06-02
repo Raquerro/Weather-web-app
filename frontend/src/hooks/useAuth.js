@@ -1,8 +1,18 @@
-import { useState } from "react";
-import { login, logout, register, getUser } from "../services/authService";
+import { useState, useEffect } from "react";
+import { login, logout, register, getUser, tryRefresh  } from "../services/authService";
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);  // nowe – czekamy na silent refresh
+
+  useEffect(() => {
+    const init = async () => {
+      const refreshed = await tryRefresh();
+      if (refreshed) setUser(getUser());
+      setLoading(false);
+    };
+    init();
+  }, []);
 
   const handleLogin = async (email, password) => {
     const data = await login(email, password);
@@ -19,5 +29,5 @@ export const useAuth = () => {
     setUser(null);
   };
 
-  return { user, login: handleLogin, register: handleRegister, logout: handleLogout };
+  return { user, loading, login: handleLogin, register: handleRegister, logout: handleLogout };
 };

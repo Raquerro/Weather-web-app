@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { authFetch } from "../services/authService";
 
 const customIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
@@ -53,9 +54,12 @@ export default function WeatherPage({ user, logout }) {
 
   const fetchWeather = async () => {
     if (!coords) return;
-    const res = await fetch(
-      `http://127.0.0.1:8000/weather?lat=${coords.lat}&lon=${coords.lon}`
+    const res = await authFetch(
+    `/weather?lat=${coords.lat}&lon=${coords.lon}`
     );
+
+    if (!res) return; // authFetch przekierował na /login
+    
     const data = await res.json();
     if (!data.daily) {
       alert("Nie udało się pobrać pogody.");
@@ -70,7 +74,19 @@ export default function WeatherPage({ user, logout }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", borderBottom: "1px solid #eee" }}>
         <h1 style={{ margin: 0 }}>Pogoda z mapy</h1>
         <div>
-          <span style={{ marginRight: 15 }}>👤 {user?.email}</span>
+          <span style={{ marginRight: 15 }}>
+          👤 {user?.email}
+          {user?.role === "premium" && (
+            <span style={{ marginLeft: 6, fontSize: 12, backgroundColor: "#f0c040", padding: "2px 8px", borderRadius: 10 }}>
+              PREMIUM
+            </span>
+          )}
+          {user?.role === "admin" && (
+            <span style={{ marginLeft: 6, fontSize: 12, backgroundColor: "#4A90E2", color: "white", padding: "2px 8px", borderRadius: 10 }}>
+              ADMIN
+            </span>
+          )}
+        </span>
           <button onClick={logout} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #ccc", cursor: "pointer" }}>
             Wyloguj
           </button>
@@ -92,8 +108,8 @@ export default function WeatherPage({ user, logout }) {
 
         {weather && (
           <div style={{ marginTop: 20 }}>
-            <h2>Prognoza 3 dni</h2>
-            {weather.daily.time.slice(0, 3).map((day, index) => {
+            <h2>Prognoza {weather._meta?.forecast_days || 3} dni</h2>
+            {weather.daily.time.slice(0, weather._meta?.forecast_days || 3).map((day, index) => {
               const code = weather.daily.weathercode[index];
               const isDangerous = [56, 57, 82, 95, 96, 99].includes(code);
               const info = weatherMap[code] || { label: "Nieznana", icon: "❓" };
@@ -103,6 +119,16 @@ export default function WeatherPage({ user, logout }) {
                   <p style={{ fontSize: 22 }}>{info.icon} {info.label}</p>
                   <p>Max: {weather.daily.temperature_2m_max[index]}°C</p>
                   <p>Min: {weather.daily.temperature_2m_min[index]}°C</p>
+                  {weather._meta?.premium && (
+                    <>
+                      {weather.daily.precipitation_sum?.[index] !== undefined && (
+                        <p>🌧️ Opady: {weather.daily.precipitation_sum[index]} mm</p>
+                      )}
+                      {weather.daily.windspeed_10m_max?.[index] !== undefined && (
+                        <p>💨 Wiatr: {weather.daily.windspeed_10m_max[index]} km/h</p>
+                      )}
+                    </>
+                  )}
                   {isDangerous && <p style={{ color: "red", fontWeight: "bold" }}>Uwaga: niebezpieczne warunki pogodowe</p>}
                 </div>
               );

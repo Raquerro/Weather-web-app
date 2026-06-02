@@ -6,7 +6,9 @@ import WeatherPage from "./pages/WeatherPage";
 
 
 function App() {
-  const { user, login, register, logout } = useAuth();
+  const { user, loading, login, register, logout } = useAuth();
+
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", marginTop: 100 }}>Ładowanie...</div>;
 
   return (
     <BrowserRouter>
