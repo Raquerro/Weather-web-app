@@ -3,6 +3,8 @@ import { useAuth } from "./hooks/useAuth";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import WeatherPage from "./pages/WeatherPage";
+import AdminPage from "./pages/AdminPage";
+import SettingsPage from "./pages/SettingsPage";
 
 
 function App() {
@@ -13,12 +15,20 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage login={login} />} />
+        <Route path="/login"    element={<LoginPage login={login} />} />
         <Route path="/register" element={<RegisterPage register={register} />} />
         <Route path="/" element={
-          user
-            ? <WeatherPage logout={logout} user={user} />
-            : <Navigate to="/login" />
+          user ? <WeatherPage user={user} logout={logout} />
+               : <Navigate to="/login" />
+        } />
+        <Route path="/admin" element={
+          user?.role === "admin" ? <AdminPage user={user} />
+          : user ? <Navigate to="/" />
+                 : <Navigate to="/login" />
+        } />
+        <Route path="/settings" element={
+          user ? <SettingsPage user={user} logout={logout} />
+              : <Navigate to="/login" />
         } />
       </Routes>
     </BrowserRouter>

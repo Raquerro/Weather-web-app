@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 import models, auth
 from database import engine, get_db
-from schemas import RegisterRequest, LoginRequest, TokenResponse, UpdateRoleRequest, UpdateProfileRequest
+from schemas import RegisterRequest, LoginRequest, TokenResponse, UpdateRoleRequest, UpdateProfileRequest, ChangePasswordRequest
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 import secrets
@@ -216,3 +216,17 @@ def update_profile(
     db: Session = Depends(get_db)
 ):
     return UserRepository(db).update_profile(user_id, payload.model_dump(exclude_none=True), requester)
+
+@app.patch("/users/{user_id}/password")
+def change_password(
+    user_id: int,
+    payload: ChangePasswordRequest,
+    requester = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return UserRepository(db).change_password(
+        user_id,
+        payload.current_password,
+        payload.new_password,
+        requester
+    )

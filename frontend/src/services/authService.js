@@ -84,15 +84,18 @@ export const getUser = (token = inMemoryToken) => {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
     if (payload.exp * 1000 < Date.now()) return null;
-    return payload;
+    return {
+      ...payload,
+      user_id: payload.sub  // ← dodaj alias
+    };
   } catch {
     return null;
   }
 };
 
 // automatycznie odnawia access token gdy wygaśnie
-export const authFetch = async (path, options = {}) => {
-  let res = await fetch(`${API_URL}${path}`, {
+export const authFetch = async (path, options = {}, baseUrl = API_URL) => {
+  let res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers: { ...options.headers, Authorization: `Bearer ${getToken()}` },
   });
@@ -105,7 +108,7 @@ export const authFetch = async (path, options = {}) => {
       window.location.href = "/login?reason=session_expired";
       return;
     }
-    res = await fetch(`${API_URL}${path}`, {
+    res = await fetch(`${baseUrl}${path}`, {
       ...options,
       headers: { ...options.headers, Authorization: `Bearer ${getToken()}` },
     });

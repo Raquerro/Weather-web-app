@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import models
 import logging
+import auth
 
 # konfiguracja loggera – zapisuje do pliku i konsoli
 logging.basicConfig(
@@ -159,3 +160,25 @@ class UserRepository:
                 for role in ROLE_HIERARCHY
             }
         }
+
+    def change_password(self, user_id: int, current_password: str, new_password: str, requester: dict) -> dict:
+        self._require_own_or_admin(requester, user_id)
+
+        user = self.db.query(models.User).filter_by(id=user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Użytkownik nie istnieje")
+
+        if not auth.verify_password(current_password, user.password):
+            audit.warning(f"WRONG_CURRENT_PASSWORD user={user.email}")
+            raise HTTPException(status_code=400, detail="Nieprawidłowe obecne hasło")
+
+        if auth.verify_password(new_password, user.password):
+            raise HTTPException(status_code=400, detail="Nowe hasło musi być inne niż obecne")
+
+        user.password = auth.hash_password(new_password)
+        # unieważnij wszystkie sesje – użytkownik musi zalogować się ponownie
+        self.db.query(models.RefreshToken).filter_by(user_id=user.id).delete(synchronize_session=False)
+        self.db.commit()
+
+        audit.info(f"PASSWORD_CHANGED user={user.email} by={requester.get('email')}")
+        return {"message": "Hasło zostało zmienione. Zaloguj się ponownie."}

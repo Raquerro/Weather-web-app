@@ -43,3 +43,14 @@ class UpdateProfileRequest(BaseModel):
             if not digits.isdigit() or not (7 <= len(digits) <= 15):
                 raise ValueError("Nieprawidłowy numer telefonu")
         return v
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_length(cls, v):
+        if len(v) < 8:  raise ValueError("Hasło musi mieć co najmniej 8 znaków")
+        if len(v) > 72: raise ValueError("Hasło nie może być dłuższe niż 72 znaki")
+        return v

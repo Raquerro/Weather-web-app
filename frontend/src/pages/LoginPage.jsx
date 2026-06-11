@@ -11,6 +11,7 @@ export default function LoginPage({ login }) {
 
   const sessionMessages = {
     session_expired: "Twoja sesja wygasła. Zaloguj się ponownie.",
+    password_changed: "Hasło zostało zmienione. Zaloguj się używając nowego hasła.",
   };
   const sessionMessage = sessionMessages[searchParams.get("reason")]; 
 

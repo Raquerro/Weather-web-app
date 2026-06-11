@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, useMapEvents, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { authFetch } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
 const customIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
@@ -49,6 +50,7 @@ function LocationMarker({ setCoords }) {
 }
 
 export default function WeatherPage({ user, logout }) {
+  const navigate = useNavigate();
   const [coords, setCoords] = useState(null);
   const [weather, setWeather] = useState(null);
 
@@ -74,6 +76,22 @@ export default function WeatherPage({ user, logout }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", borderBottom: "1px solid #eee" }}>
         <h1 style={{ margin: 0 }}>Pogoda z mapy</h1>
         <div>
+          {user?.role === "admin" && (
+            <button
+              onClick={() => navigate("/admin")}
+              style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #1B3A5C",
+                      backgroundColor: "#1B3A5C", color: "#fff", cursor: "pointer", marginRight: 8 }}
+            >
+              Panel admina
+            </button>
+          )}
+          <button
+            onClick={() => navigate("/settings")}
+            style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #ccc",
+                    backgroundColor: "#fff", cursor: "pointer", marginRight: 8 }}
+          >
+            ⚙️ Ustawienia
+          </button>
           <span style={{ marginRight: 15 }}>
           👤 {user?.email}
           {user?.role === "premium" && (
