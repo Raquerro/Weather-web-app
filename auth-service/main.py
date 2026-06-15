@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Response, Request
+from fastapi import FastAPI, HTTPException, Depends, Response, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
@@ -29,6 +29,7 @@ app.add_middleware(
 security  = HTTPBearer()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM  = os.getenv("ALGORITHM", "HS256")
+INTERNAL_SERVICE_TOKEN = os.getenv("INTERNAL_SERVICE_TOKEN")
 
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -230,3 +231,22 @@ def change_password(
         payload.new_password,
         requester
     )
+
+@app.get("/internal/users/sms-targets")
+def get_sms_targets(
+    x_service_token: str = Header(None),
+    db: Session = Depends(get_db)
+):
+    if not INTERNAL_SERVICE_TOKEN or x_service_token != INTERNAL_SERVICE_TOKEN:
+        raise HTTPException(status_code=403, detail="Nieprawidłowy token serwisu")
+
+    users = db.query(models.User).filter(
+        models.User.sms_notifications == True,
+        models.User.phone != None,
+        models.User.is_active == True
+    ).all()
+
+    return [
+        {"user_id": u.id, "email": u.email, "phone": u.phone}
+        for u in users
+    ]

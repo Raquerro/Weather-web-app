@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { updateProfile, changePassword, getProfile } from "../services/settingsService";
+import { getNotifications, updateNotification, deleteNotification } from "../services/settingsService";
 
 const validate = (phone) => {
   if (!phone) return null;
@@ -35,12 +36,17 @@ export default function SettingsPage({ user, logout: handleLogout }) {
   const [passwordMsg, setPasswordMsg]         = useState(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
+  const [notifications, setNotifications]   = useState([]);
+  const [notifError, setNotifError]         = useState(null);
+
   useEffect(() => {
     const load = async () => {
       try {
         const data = await getProfile(user.user_id);
         setPhone(data.phone || "");
         setSmsNotifications(data.sms_notifications || false);
+        const notifs = await getNotifications();
+        setNotifications(notifs);
       } catch {
         // profil niedostępny
       } finally {
@@ -98,6 +104,24 @@ export default function SettingsPage({ user, logout: handleLogout }) {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+    }
+  };
+
+  const handleToggleNotif = async (id, currentActive) => {
+    try {
+      const updated = await updateNotification(id, { active: !currentActive });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, ...updated } : n));
+    } catch (err) {
+       setNotifError(err.message);
+    }
+  };
+
+  const handleDeleteNotif = async (id) => {
+    try {
+      await deleteNotification(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (err) {
+      setNotifError(err.message);
     }
   };
 
@@ -247,7 +271,65 @@ export default function SettingsPage({ user, logout: handleLogout }) {
             {passwordLoading ? "Zmienianie..." : "Zmień hasło"}
           </button>
         </div>
+        {/* Sekcja: Moje lokalizacje */}
+        <div style={styles.card}>
+          <h2 style={styles.cardTitle}>
+            Moje lokalizacje powiadomień
+            <span style={{ fontSize: 13, fontWeight: "normal", color: "#888", marginLeft: 8 }}>
+              ({notifications.length}/5)
+            </span>
+          </h2>
 
+          {notifError && <p style={styles.error}>{notifError}</p>}
+
+          {notifications.length === 0 ? (
+            <p style={{ color: "#888", fontSize: 14 }}>
+              Brak zapisanych lokalizacji. Wróć na mapę i kliknij 📌 Zapisz lokalizację.
+            </p>
+          ) : (
+            notifications.map(n => (
+              <div key={n.id} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "10px 12px", borderRadius: 8, marginBottom: 8,
+                backgroundColor: n.active ? "#eafaf1" : "#f5f5f5",
+                border: `1px solid ${n.active ? "#a9dfbf" : "#ddd"}`,
+              }}>
+                <div>
+                  <div style={{ fontWeight: "bold", fontSize: 14 }}>{n.name}</div>
+                  <div style={{ fontSize: 12, color: "#888" }}>
+                    {Number(n.latitude).toFixed(4)}, {Number(n.longitude).toFixed(4)}
+                    {" · "}powiadomienie o {String(n.notify_hour).padStart(2, "0")}:00
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => handleToggleNotif(n.id, n.active)}
+                    style={{
+                      padding: "4px 10px", borderRadius: 6, border: "none", cursor: "pointer",
+                      backgroundColor: n.active ? "#27ae60" : "#bbb", color: "#fff", fontSize: 12,
+                    }}
+                  >
+                    {n.active ? "Aktywna" : "Nieaktywna"}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteNotif(n.id)}
+                    style={{
+                      padding: "4px 10px", borderRadius: 6, border: "none",
+                      backgroundColor: "#e74c3c", color: "#fff", cursor: "pointer", fontSize: 12,
+                    }}
+                  >
+                    Usuń
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
+          <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
+            Możesz zapisać maksymalnie 5 lokalizacji. Powiadomienia SMS wysyłane są codziennie
+            o wybranej godzinie jeśli prognoza przewiduje niebezpieczne warunki.
+          </p>
+        </div>
       </div>
     </div>
   );

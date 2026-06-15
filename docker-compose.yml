@@ -36,6 +36,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ALGORITHM=${ALGORITHM}
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
 
   db:
     image: mysql:8
@@ -55,6 +56,19 @@ services:
       timeout: 10s
       retries: 20
       start_period: 40s
+
+  sms-service:
+    build: ./sms-service
+    ports:
+      - "8002:8002"
+    depends_on:
+      - auth-service
+    environment:
+      - SMS_PROVIDER=${SMS_PROVIDER}
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - BACKEND_URL=http://api:8000
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
+      - SMS_CHECK_INTERVAL_HOURS=${SMS_CHECK_INTERVAL_HOURS}
 
 volumes:
   mysql_data:

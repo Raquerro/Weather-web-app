@@ -2,4 +2,6 @@ fastapi
 uvicorn
 requests
 python-jose[cryptography]
-passlib[bcrypt]
+sqlalchemy
+pymysql
+python-dotenv
