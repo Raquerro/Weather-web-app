@@ -15,12 +15,12 @@ class NotificationRepository:
 
     def get_all(self, requester: dict) -> list:
         return self.db.query(models.NotificationConfig).filter_by(
-            user_id=requester["user_id"]
+            user_id=int(requester["user_id"])
         ).all()
 
     def create(self, data: dict, requester: dict) -> models.NotificationConfig:
         count = self.db.query(models.NotificationConfig).filter_by(
-            user_id=requester["user_id"]
+            user_id=int(requester["user_id"])
         ).count()
         if count >= MAX_CONFIGS_PER_USER:
             raise HTTPException(
@@ -28,7 +28,7 @@ class NotificationRepository:
                 detail=f"Maksymalna liczba lokalizacji to {MAX_CONFIGS_PER_USER}"
             )
         config = models.NotificationConfig(
-            user_id=requester["user_id"],
+            user_id=int(requester["user_id"]),
             **data
         )
         self.db.add(config)

@@ -19,7 +19,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://localhost"],   # HTTPS zamiast HTTP
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,11 +73,12 @@ def login(request: Request, data: LoginRequest, response: Response, db: Session 
     ))
     db.commit()
 
+    # w endpointach login i refresh – secure=True
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,   # True na produkcji z HTTPS
+        secure=True,        # ← zmień na True
         samesite="strict",
         max_age=7 * 24 * 60 * 60
     )

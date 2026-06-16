@@ -183,3 +183,4 @@ cython_debug/
 
 *.pyc
 node_modules/
+nginx/certs/

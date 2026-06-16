@@ -1,10 +1,10 @@
-const AUTH_URL = process.env.REACT_APP_AUTH_URL;
-const API_URL  = process.env.REACT_APP_API_URL;
+// Hardcoded puste stringi – wszystko przez nginx
+const AUTH_URL = "";
+const API_URL  = "";
 
 let inMemoryToken = null;
 
 export const getToken = () => inMemoryToken;
-
 
 const getErrorMessage = async (res) => {
   try {
@@ -16,7 +16,7 @@ const getErrorMessage = async (res) => {
   } catch {
     return "Nieznany błąd serwera.";
   }
-};  
+};
 
 export const register = async (email, password) => {
   let res;
@@ -28,7 +28,7 @@ export const register = async (email, password) => {
       credentials: "include",
     });
   } catch {
-    throw new Error("Brak połączenia z serwerem. Sprawdź połączenie internetowe.");
+    throw new Error("Brak połączenia z serwerem.");
   }
   if (!res.ok) throw new Error(await getErrorMessage(res));
   return res.json();
@@ -44,12 +44,33 @@ export const login = async (email, password) => {
       credentials: "include",
     });
   } catch {
-    throw new Error("Brak połączenia z serwerem. Sprawdź połączenie internetowe.");
+    throw new Error("Brak połączenia z serwerem.");
   }
   if (!res.ok) throw new Error(await getErrorMessage(res));
   const data = await res.json();
   inMemoryToken = data.access_token;
   return data;
+};
+
+export const logout = async () => {
+  try {
+    await fetch(`${AUTH_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {}
+  inMemoryToken = null;
+};
+
+export const getUser = (token = inMemoryToken) => {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    if (payload.exp * 1000 < Date.now()) return null;
+    return { ...payload, user_id: payload.sub };
+  } catch {
+    return null;
+  }
 };
 
 export const tryRefresh = async () => {
@@ -67,33 +88,6 @@ export const tryRefresh = async () => {
   }
 };
 
-export const logout = async () => {
-  try {
-    await fetch(`${AUTH_URL}/auth/logout`, {
-      method: "POST",
-      credentials: "include",
-    });
-  } catch {
-    // nawet jeśli serwer nie odpowie, czyścimy token lokalnie
-  }
-  inMemoryToken = null;
-};
-
-export const getUser = (token = inMemoryToken) => {
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    if (payload.exp * 1000 < Date.now()) return null;
-    return {
-      ...payload,
-      user_id: payload.sub  // ← dodaj alias
-    };
-  } catch {
-    return null;
-  }
-};
-
-// automatycznie odnawia access token gdy wygaśnie
 export const authFetch = async (path, options = {}, baseUrl = API_URL) => {
   let res = await fetch(`${baseUrl}${path}`, {
     ...options,
@@ -104,7 +98,6 @@ export const authFetch = async (path, options = {}, baseUrl = API_URL) => {
     const refreshed = await tryRefresh();
     if (!refreshed) {
       inMemoryToken = null;
-      // przekazuje powód przekierowania jako parametr URL
       window.location.href = "/login?reason=session_expired";
       return;
     }
@@ -113,7 +106,5 @@ export const authFetch = async (path, options = {}, baseUrl = API_URL) => {
       headers: { ...options.headers, Authorization: `Bearer ${getToken()}` },
     });
   }
-
   return res;
 };
-
