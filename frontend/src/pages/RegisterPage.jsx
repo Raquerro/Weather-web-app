@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 
 const getPasswordStrength = (password) => {
   if (password.length === 0) return null;
-  if (password.length < 8)   return { label: "Za krótkie (min. 8 znaków)", color: "#e74c3c", width: "25%" };
+  if (password.length < 8)   return { label: "Za krótkie (min. 8 znaków)", color: "#ff7675", width: "25%" }; // Dopasowany jaśniejszy czerwony
   if (password.length < 12)  return { label: "Słabe", color: "#e67e22", width: "50%" };
   if (password.length < 16)  return { label: "Dobre", color: "#2ecc71", width: "75%" };
   return                             { label: "Silne",  color: "#27ae60", width: "100%" };
@@ -26,7 +26,6 @@ export default function RegisterPage({ register }) {
 
   const strength = getPasswordStrength(password);
 
-
   const handleSubmit = async () => {
     const validationError = validate(email, password);
     if (validationError) { setError(validationError); return; }
@@ -43,9 +42,9 @@ export default function RegisterPage({ register }) {
   };
 
   return (
-     <div style={styles.container}>
+     <div style={styles.pageContainer}>
       <div style={styles.card}>
-        <h2 style={{ marginBottom: 20 }}>Rejestracja</h2>
+        <h2 style={styles.title}>Rejestracja</h2>
 
         {error && <p style={styles.error}>{error}</p>}
 
@@ -66,11 +65,12 @@ export default function RegisterPage({ register }) {
         />
 
         {strength && (
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ height: 4, backgroundColor: "#eee", borderRadius: 2, marginBottom: 4 }}>
-              <div style={{ height: "100%", width: strength.width, backgroundColor: strength.color, borderRadius: 2, transition: "width 0.3s" }} />
+          <div style={{ marginBottom: 16 }}>
+            {/* Zmieniono tło paska na ciemnoszare (#333) */}
+            <div style={{ height: 6, backgroundColor: "#333", borderRadius: 3, marginBottom: 6 }}>
+              <div style={{ height: "100%", width: strength.width, backgroundColor: strength.color, borderRadius: 3, transition: "width 0.3s ease-in-out" }} />
             </div>
-            <span style={{ fontSize: 12, color: strength.color }}>{strength.label}</span>
+            <span style={{ fontSize: 12, color: strength.color, fontWeight: "bold" }}>{strength.label}</span>
           </div>
         )}
 
@@ -81,8 +81,9 @@ export default function RegisterPage({ register }) {
         >
           {loading ? "Rejestrowanie..." : "Zarejestruj się"}
         </button>
-        <p style={{ marginTop: 12, textAlign: "center" }}>
-          Masz już konto? <Link to="/login">Zaloguj się</Link>
+        
+        <p style={styles.text}>
+          Masz już konto? <Link to="/login" style={styles.link}>Zaloguj się</Link>
         </p>
       </div>
     </div>
@@ -90,9 +91,74 @@ export default function RegisterPage({ register }) {
 }
 
 const styles = {
-  container: { display: "flex", justifyContent: "center", marginTop: 80 },
-  card:      { display: "flex", flexDirection: "column", width: 340, padding: 30, borderRadius: 10, boxShadow: "0 2px 10px rgba(0,0,0,0.1)" },
-  input:     { marginBottom: 12, padding: 10, borderRadius: 6, border: "1px solid #ccc", fontSize: 14 },
-  button:    { padding: 10, borderRadius: 6, backgroundColor: "#4A90E2", color: "white", border: "none", cursor: "pointer", fontSize: 15 },
-  error:     { color: "#c0392b", backgroundColor: "#fdecea", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: 14 },
+  pageContainer: { 
+    minHeight: "100vh", 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    backgroundColor: "#121212",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  },
+  card: { 
+    display: "flex", 
+    flexDirection: "column", 
+    width: 360, 
+    padding: 32, 
+    borderRadius: "12px", 
+    backgroundColor: "#1E1E1E",
+    border: "1px solid #333",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+    boxSizing: "border-box"
+  },
+  title: {
+    marginBottom: 24,
+    color: "#E0E0E0",
+    textAlign: "center",
+    marginTop: 0
+  },
+  input: { 
+    marginBottom: 16, 
+    padding: 12, 
+    borderRadius: 8, 
+    backgroundColor: "#2A2A2A",
+    border: "1px solid #444",
+    color: "#FFF",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    width: "100%"
+  },
+  button: { 
+    padding: "12px", 
+    borderRadius: 8, 
+    backgroundColor: "#4A90E2", 
+    color: "white", 
+    border: "none", 
+    cursor: "pointer", 
+    fontSize: 15,
+    fontWeight: "bold",
+    marginTop: 8,
+    transition: "background-color 0.2s"
+  },
+  error: { 
+    color: "#ff7675", 
+    backgroundColor: "#3A1C1C", 
+    border: "1px solid #e74c3c",
+    padding: "10px", 
+    borderRadius: 8, 
+    marginBottom: 16, 
+    fontSize: 14,
+    textAlign: "center"
+  },
+  text: {
+    marginTop: 20,
+    textAlign: "center",
+    color: "#A0A0A0",
+    fontSize: 14
+  },
+  link: {
+    color: "#4A90E2",
+    textDecoration: "none",
+    fontWeight: "bold"
+  }
 };

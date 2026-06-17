@@ -25,8 +25,9 @@ def health():
 async def trigger_check(
     x_service_token: str = Header(None),
     lat: float = 52.23,
-    lon: float = 21.01
+    lon: float = 21.01,
+    force: bool = False
 ):
     if not INTERNAL_SERVICE_TOKEN or x_service_token != INTERNAL_SERVICE_TOKEN:
         raise HTTPException(status_code=403, detail="Brak dostępu")
-    return await run_sms_check(lat=lat, lon=lon)
+    return await run_sms_check(lat=lat, lon=lon, force=force)

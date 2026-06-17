@@ -23,6 +23,8 @@ services:
       - DATABASE_URL=mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/appdb
       - SECRET_KEY=${SECRET_KEY}
       - ALGORITHM=${ALGORITHM}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}  
+      - SMS_SERVICE_URL=http://sms-service:8002           # do sms service reczne wywolanie
 
   auth-service:
     build: ./auth-service
@@ -69,6 +71,17 @@ services:
       - BACKEND_URL=http://api:8000
       - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
       - SMS_CHECK_INTERVAL_HOURS=${SMS_CHECK_INTERVAL_HOURS}
+      - SMSAPI_TOKEN=${SMSAPI_TOKEN}       # Token do serwisu SMS
+      - SMSAPI_SENDER=${SMSAPI_SENDER}     # Sender
+
+# --- NAKŁADKA BAZY DANYCH ---
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
 
 volumes:
   mysql_data:

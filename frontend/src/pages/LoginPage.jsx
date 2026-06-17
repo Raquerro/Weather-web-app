@@ -16,15 +16,14 @@ export default function LoginPage({ login }) {
   const sessionMessage = sessionMessages[searchParams.get("reason")]; 
 
   const validate = (email, password) => {
-  if (!email || !password) return "Wypełnij wszystkie pola.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Podaj prawidłowy adres email.";
-  return null;
-};
+    if (!email || !password) return "Wypełnij wszystkie pola.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Podaj prawidłowy adres email.";
+    return null;
+  };
 
   const handleSubmit = async () => {
     const validationError = validate(email, password);
     if (validationError) { setError(validationError); return; }
-    setError(null);
     setError(null);
     setLoading(true);
     try {
@@ -37,15 +36,12 @@ export default function LoginPage({ login }) {
     }
   };
 
-   return (
-    <div style={styles.container}>
+  return (
+    <div style={styles.pageContainer}>
       <div style={styles.card}>
-        <h2 style={{ marginBottom: 20 }}>Logowanie</h2>
+        <h2 style={styles.title}>Logowanie</h2>
 
-        {sessionMessage && (
-          <p style={styles.warning}>{sessionMessage}</p>
-        )}
-
+        {sessionMessage && <p style={styles.warning}>{sessionMessage}</p>}
         {error && <p style={styles.error}>{error}</p>}
 
         <input
@@ -70,8 +66,8 @@ export default function LoginPage({ login }) {
         >
           {loading ? "Logowanie..." : "Zaloguj się"}
         </button>
-        <p style={{ marginTop: 12, textAlign: "center" }}>
-          Nie masz konta? <Link to="/register">Zarejestruj się</Link>
+        <p style={styles.text}>
+          Nie masz konta? <Link to="/register" style={styles.link}>Zarejestruj się</Link>
         </p>
       </div>
     </div>
@@ -79,10 +75,84 @@ export default function LoginPage({ login }) {
 }
 
 const styles = {
-  container: { display: "flex", justifyContent: "center", marginTop: 80 },
-  card: { display: "flex", flexDirection: "column", width: 340, padding: 30, borderRadius: 10, boxShadow: "0 2px 10px rgba(0,0,0,0.1)" },
-  input: { marginBottom: 12, padding: 10, borderRadius: 6, border: "1px solid #ccc", fontSize: 14 },
-  button: { padding: 10, borderRadius: 6, backgroundColor: "#4A90E2", color: "white", border: "none", cursor: "pointer", fontSize: 15 },
-  error: { color: "#c0392b", backgroundColor: "#fdecea", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: 14 },
-  warning: { color: "#856404", backgroundColor: "#fff3cd", padding: "8px 12px", borderRadius: 6, marginBottom: 12, fontSize: 14 },
+  pageContainer: { 
+    minHeight: "100vh", 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    backgroundColor: "#121212",
+    fontFamily: "system-ui, -apple-system, sans-serif",
+  },
+  card: { 
+    display: "flex", 
+    flexDirection: "column", 
+    width: 360, 
+    padding: 32, 
+    borderRadius: "12px", 
+    backgroundColor: "#1E1E1E",
+    border: "1px solid #333",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+    boxSizing: "border-box"
+  },
+  title: {
+    marginBottom: 24,
+    color: "#E0E0E0",
+    textAlign: "center",
+    marginTop: 0
+  },
+  input: { 
+    marginBottom: 16, 
+    padding: 12, 
+    borderRadius: 8, 
+    backgroundColor: "#2A2A2A",
+    border: "1px solid #444",
+    color: "#FFF",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    width: "100%"
+  },
+  button: { 
+    padding: "12px", 
+    borderRadius: 8, 
+    backgroundColor: "#4A90E2", 
+    color: "white", 
+    border: "none", 
+    cursor: "pointer", 
+    fontSize: 15,
+    fontWeight: "bold",
+    marginTop: 8,
+    transition: "background-color 0.2s"
+  },
+  error: { 
+    color: "#ff7675", 
+    backgroundColor: "#3A1C1C", 
+    border: "1px solid #e74c3c",
+    padding: "10px", 
+    borderRadius: 8, 
+    marginBottom: 16, 
+    fontSize: 14,
+    textAlign: "center"
+  },
+  warning: { 
+    color: "#f1c40f", 
+    backgroundColor: "#332A18", 
+    border: "1px solid #d4af37",
+    padding: "10px", 
+    borderRadius: 8, 
+    marginBottom: 16, 
+    fontSize: 14,
+    textAlign: "center"
+  },
+  text: {
+    marginTop: 20,
+    textAlign: "center",
+    color: "#A0A0A0",
+    fontSize: 14
+  },
+  link: {
+    color: "#4A90E2",
+    textDecoration: "none",
+    fontWeight: "bold"
+  }
 };

@@ -6,7 +6,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("/app/logs/sms.log"),
+        logging.FileHandler("./logs/sms.log"),
     ]
 )
 sms_log = logging.getLogger("sms")

@@ -9,6 +9,7 @@ from database import engine, get_db, SessionLocal
 from models import Base, NotificationConfig
 from repositories.notification_repository import NotificationRepository
 from sqlalchemy.orm import Session
+import httpx
 
 
 app = FastAPI()
@@ -96,3 +97,16 @@ def get_active_notifications(
         }
         for c in configs
     ]
+
+SMS_SERVICE_URL = os.getenv("SMS_SERVICE_URL", "http://sms-service:8002")
+
+@app.post("/admin/trigger-sms")
+async def trigger_sms(user = Depends(require_admin)):
+    token = os.getenv("INTERNAL_SERVICE_TOKEN")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        res = await client.post(
+            f"{SMS_SERVICE_URL}/sms/trigger",
+            headers={"X-Service-Token": token},
+            params={"force": "true"}   # wywolanie admina
+        )
+        return res.json()
